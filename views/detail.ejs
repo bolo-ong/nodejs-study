@@ -16,46 +16,20 @@
   <body>
     <%- include('nav.ejs') %>
 
-      <!-- <% for(let i=0; i<posts.length; i++){ %>
-        <h4>할일 제목 : <%= posts[i]['제목'] %></h4>
-        <p>할일 마감날짜 : <%= posts[i]['날짜'] %></p>
-        <button>삭제</button>
-      <% } %> -->
 
-      <div class="container mt-4 mb-4">
-        <ul class="list-group">
-          <% for(let i=0; i<posts.length; i++){ %>
-          <li class="list-group-item">
-            <p>글번호 : <%= posts[i]['_id'] %></p>
-            <a href="detail/<%= posts[i]['_id'] %>"><h4>할일 : <%= posts[i]['제목'] %></h4></a>
-            <p>마감날짜 : <%= posts[i]['날짜'] %></p>
-            <button class="delete btn-sm btn-danger" data-id = "<%= posts[i]['_id'] %>">삭제</button>
-            <a href="edit/<%= posts[i]['_id'] %>"><button class="correct btn-sm btn-primary">수정</button></a>
-          </li>
-          <% } %>
-        </ul>
-      </div>
-
-      <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-      <script>
-        
-        $('.delete').click(function(e){
-          var index = e.target.dataset.id
-
-          $.ajax({
-            method : 'DELETE',
-            url : `/delete/${index}`,
-          }).done((result) => {
-            console.log('성공');
-            $(this).parent('li').fadeOut();
-          }).fail(() => {
-            console.log('실패');
-          })
-        })
-      </script>
+    <div class="container mt-4 mb-4">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+            <h5 class="card-title">제목 : <%= data['제목'] %></h5>
+            <h6 class="card-subtitle mb-2 text-muted">날짜 : <%= data['날짜'] %></h6>
+            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+            <a href="#" class="card-link">수정하기</a>
+            </div>
+        </div>
+    </div>
 
 
-
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <!-- Optional JavaScript; choose one of the two! -->
 
     <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
