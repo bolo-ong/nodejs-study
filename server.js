@@ -82,8 +82,53 @@ app.get('/edit/:id', (req, res) => {
 })
 
 app.put('/edit', (req, res) => {
-    db.collection('post').updateOne({ _id: parseInt(req.body.id)}, { $set: { 제목: req.body.title, 날짜: req.body.date}}, (error, result) => {
+    db.collection('post').updateOne({ _id: parseInt(req.body.id) }, { $set: { 제목: req.body.title, 날짜: req.body.date } }, (error, result) => {
         console.log('수정완료')
         res.redirect('/list')
     })
+})
+
+
+const passport = require('passport')
+const LocalStrategy = require('passport-local').Strategy
+const session = require('express-session')
+
+app.use(session({ secret : '비밀코드', resave : true, saveUninitialized: false }))
+app.use(passport.initialize())
+app.use(passport.session())
+
+app.get('/login', (req, res) => {
+    res.render('login.ejs')
+})
+
+app.post('/login', passport.authenticate('local', {
+    failureRedirect: '/fail'
+}), (req, res) => {
+    res.redirect('/')
+})
+
+passport.use(new LocalStrategy({
+    usernameField: 'id',
+    passwordField: 'pw',
+    session: true,
+    passReqToCallback: false,
+}, function (입력한아이디, 입력한비번, done) {
+    console.log(입력한아이디, 입력한비번);
+    db.collection('login').findOne({ id: 입력한아이디 }, function (error, result) {
+        if (error) return done(error)
+
+        if (!result) return done(null, false, { message: '존재하지않는 아이디요' })
+        if (입력한비번 == result.pw) {
+            return done(null, result)
+        } else {
+            return done(null, false, { message: '비번틀렸어요' })
+        }
+    })
+}));
+
+passport.serializeUser((user, done) => {
+    done(null, user.id)
+})
+passport.deserializeUser((아이디, done) => {
+    done(null, {})
 })
