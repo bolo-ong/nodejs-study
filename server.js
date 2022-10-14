@@ -107,6 +107,18 @@ app.post('/login', passport.authenticate('local', {
     res.redirect('/')
 })
 
+app.get('/mypage', isLogin, (req, res) => {
+    res.render('mypage.ejs', {user : req.user})
+})
+
+function isLogin(req, res, next){
+    if(req.user){
+        next()
+    }else{
+        res.send('로그인 후 이용해 주세요')
+    }
+}
+
 passport.use(new LocalStrategy({
     usernameField: 'id',
     passwordField: 'pw',
@@ -129,6 +141,8 @@ passport.use(new LocalStrategy({
 passport.serializeUser((user, done) => {
     done(null, user.id)
 })
-passport.deserializeUser((아이디, done) => {
-    done(null, {})
+passport.deserializeUser((userID, done) => {
+    db.collection('login').findOne({id : userID}, (error, result) => {
+        done(null, result)
+    })
 })
