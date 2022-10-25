@@ -5,19 +5,21 @@ const MongoClient = require('mongodb').MongoClient
 const methodOverride = require('method-override')
 app.use(methodOverride('_method'))
 
+require('dotenv').config()
+
 app.set('view engine', 'ejs')
 
 app.use('/public', express.static('public'))
 
 var db
-MongoClient.connect('mongodb+srv://bolo:minwon0521@cluster0.hrkz1cc.mongodb.net/?retryWrites=true&w=majority', { useUnifiedTopology: true }, (error, client) => {
+MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, client) => {
     db = client.db('todoapp')
 
     if (error) {
         return console.log(error)
     }
 
-    app.listen(8080, () => {
+    app.listen(process.env.PORT, () => {
         console.log('listening on 8080')
     })
 })
@@ -49,6 +51,14 @@ app.get('/list', (req, res) => {
     db.collection('post').find().toArray((error, result) => {
         console.log(result)
         res.render('list.ejs', { posts: result })
+    })
+})
+
+app.get('/search', (req, res) => {
+    console.log(req.query.value)
+    db.collection('post').find({제목 : req.query.value}).toArray((error, result) => {
+        console.log(result)
+        res.render('search.ejs', { posts: result })
     })
 })
 
