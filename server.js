@@ -56,7 +56,20 @@ app.get('/list', (req, res) => {
 
 app.get('/search', (req, res) => {
     console.log(req.query.value)
-    db.collection('post').find({제목 : req.query.value}).toArray((error, result) => {
+    let searchCondition = [
+        {
+            $search: {
+                index: 'titleSearch',
+                text: {
+                    query: req.query.value,
+                    path: "제목" //제목날짜 둘 다 찾고 싶으면 ['제목', '날짜']
+                }
+            }
+        },
+        //{$project : {제목: 1, _id: 0, score: {$meta: "searchScore"}}},
+        {$sort : {_id : 1}}
+    ]
+    db.collection('post').aggregate(searchCondition).toArray((error, result) => {
         console.log(result)
         res.render('search.ejs', { posts: result })
     })
