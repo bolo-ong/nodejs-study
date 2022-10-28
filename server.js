@@ -32,21 +32,6 @@ app.get('/write', function (req, res) {
     res.render('write.ejs')
 })
 
-app.post('/add', (req, res) => {
-    res.send('전송완료')
-
-    db.collection('counter').findOne({ name: '게시물 개수' }, (error, result) => {
-        let totalNotice = result.totalPost
-
-        db.collection('post').insertOne({ _id: totalNotice + 1, 제목: req.body.title, 날짜: req.body.date }, (error, result) => {
-            console.log('저장완료')
-            db.collection('counter').updateOne({ name: '게시물 개수' }, { $inc: { totalPost: 1 } }, (error, result) => {
-                if (error) { return console.log(error) }
-            })
-        })
-    })
-})
-
 app.get('/list', (req, res) => {
     db.collection('post').find().toArray((error, result) => {
         console.log(result)
@@ -75,15 +60,6 @@ app.get('/search', (req, res) => {
     })
 })
 
-app.delete('/delete/:id', (req, res) => {
-    req.body._id = parseInt(req.body._id)
-    console.log(req.body)
-    db.collection('post').deleteOne(req.body, (error, result) => {
-        console.log('삭제완료')
-        res.status(200).send({ message: '성공함' })
-    })
-})
-
 app.get('/detail/:id', (req, res) => {
     db.collection('post').findOne({ _id: parseInt(req.params.id) }, (error, result) => {
         console.log(result)
@@ -104,17 +80,11 @@ app.get('/edit/:id', (req, res) => {
     })
 })
 
-app.put('/edit', (req, res) => {
-    db.collection('post').updateOne({ _id: parseInt(req.body.id) }, { $set: { 제목: req.body.title, 날짜: req.body.date } }, (error, result) => {
-        console.log('수정완료')
-        res.redirect('/list')
-    })
-})
-
 
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const session = require('express-session')
+const e = require('express')
 
 app.use(session({ secret : '비밀코드', resave : true, saveUninitialized: false }))
 app.use(passport.initialize())
@@ -167,5 +137,61 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((userID, done) => {
     db.collection('login').findOne({id : userID}, (error, result) => {
         done(null, result)
+    })
+})
+
+
+app.post('/register', (req, res) => {
+    db.collection('login').findOne({id : req.body.id}, (error, result) => {
+        if(error){
+            console.log(error)
+        }
+        if(result){
+            res.send("<script>alert('이미 존재하는 id입니다.');history.back();</script>")
+        }
+        if(!result){
+            db.collection('login').insertOne({id:req.body.id, pw:req.body.pw}, (error, result) => {
+                res.redirect('/')
+            })
+        }
+    }
+)}
+)
+
+app.post('/add', (req, res) => {
+    res.send('전송완료')
+
+    db.collection('counter').findOne({ name: '게시물 개수' }, (error, result) => {
+        let totalNotice = result.totalPost
+        let postContents = { _id: totalNotice + 1, 작성자: req.user._id, 제목: req.body.title, 날짜: req.body.date, 작성일: new Date() }
+
+        db.collection('post').insertOne(postContents, (error, result) => {
+            console.log('저장완료')
+            db.collection('counter').updateOne({ name: '게시물 개수' }, { $inc: { totalPost: 1 } }, (error, result) => {
+                if (error) { return console.log(error) }
+            })
+        })
+    })
+})
+
+app.delete('/delete/:id', (req, res) => {
+    req.body._id = parseInt(req.body._id)
+    console.log(req.body)
+
+    let deleteData = { _id: req.body._id, 작성자: req.user._id }
+
+    db.collection('post').deleteOne(deleteData, (error, result) => {
+        console.log('삭제완료')
+        res.status(200).send({ message: '성공함' })
+    })
+})
+
+app.put('/edit', (req, res) => {
+    let editData = { _id: parseInt(req.body.id), 작성자: req.user._id }
+
+    db.collection('post').updateOne(editData, { $set: { 제목: req.body.title, 날짜: req.body.date } }, (error, result) => {
+        console.log(editData)
+        console.log('수정완료')
+        res.redirect('/list')
     })
 })
