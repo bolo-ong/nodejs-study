@@ -195,3 +195,15 @@ app.put('/edit', (req, res) => {
         res.redirect('/list')
     })
 })
+
+app.use('/shop', require('./routes/shop.js'));
+// app.get('/shop/shirts', (req, res) => {
+//     res.send('셔츠 파는 페이지입니다.')
+// })
+
+// app.get('/shop/pants', (req, res) => {
+//     res.send('바지 파는 페이지입니다.')
+// })
+
+app.use('/board/sub', require('./routes/board.js'));
+
