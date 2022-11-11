@@ -14,6 +14,12 @@
     <title>Todo App</title>
   </head>
   <body>
+    <script>
+      if(performance.navigation.type == 0){
+        window.location.reload()
+      }
+    </script>
+
     <%- include('nav.ejs') %>
 
     <div class="container input-group mt-4">
@@ -38,13 +44,16 @@
       <div class="container mt-4 mb-4">
         <ul class="list-group">
           <% for(let i=0; i<posts.length; i++){ %>
-          <li class="list-group-item">
-            <p>글번호 : <%= posts[i]['_id'] %></p>
-            <a href="detail/<%= posts[i]['_id'] %>"><h4>할일 : <%= posts[i]['제목'] %></h4></a>
-            <p>마감날짜 : <%= posts[i]['날짜'] %></p>
-            <button class="delete btn-sm btn-danger" data-id = "<%= posts[i]['_id'] %>">삭제</button>
-            <a href="edit/<%= posts[i]['_id'] %>"><button class="correct btn-sm btn-primary">수정</button></a>
-          </li>
+            <li class="list-group-item">
+              <p>글번호 : <%= posts[i]['_id'] %></p>
+              <a href="detail/<%= posts[i]['_id'] %>"><h4>할일 : <%= posts[i]['제목'] %></h4></a>
+              <p>마감날짜 : <%= posts[i]['날짜'] %></p>
+              <button class="delete btn-sm btn-danger" data-id = "<%= posts[i]['_id'] %>">삭제</button>
+              <a href="edit/<%= posts[i]['_id'] %>"><button class="correct btn-sm btn-primary">수정</button></a>
+              <form action="/chatroom/<%= posts[i]['닉네임'] %>" method="POST">
+                <button class="correct btn-sm btn-info">채팅</button>
+              </form>
+            </li>
           <% } %>
         </ul>
       </div>
@@ -54,6 +63,7 @@
         
         $('.delete').click(function(e){
           var index = e.target.dataset.id
+          console.log(index)
 
           $.ajax({
             method : 'DELETE',

@@ -97,7 +97,7 @@ app.get('/login', (req, res) => {
 app.post('/login', passport.authenticate('local', {
     failureRedirect: '/fail'
 }), (req, res) => {
-    res.redirect('/')
+    res.redirect('/list')
 })
 
 app.get('/mypage', isLogin, (req, res) => {
@@ -108,7 +108,7 @@ function isLogin(req, res, next){
     if(req.user){
         next()
     }else{
-        res.send('로그인 후 이용해 주세요')
+        res.send("<script>alert('로그인 후 이용해 주세요.');history.back();</script>")
     }
 }
 
@@ -158,12 +158,18 @@ app.post('/register', (req, res) => {
 )}
 )
 
-app.post('/add', (req, res) => {
-    res.send('전송완료')
+app.post('/add', isLogin,(req, res) => {
+    res.redirect('/list')
 
     db.collection('counter').findOne({ name: '게시물 개수' }, (error, result) => {
         let totalNotice = result.totalPost
-        let postContents = { _id: totalNotice + 1, 작성자: req.user._id, 제목: req.body.title, 날짜: req.body.date, 작성일: new Date() }
+        let postContents = { 
+            _id: totalNotice + 1, 
+            작성자: req.user._id, 
+            닉네임: req.user.id, 
+            제목: req.body.title, 
+            날짜: req.body.date, 
+            작성일: new Date() }
 
         db.collection('post').insertOne(postContents, (error, result) => {
             console.log('저장완료')
@@ -174,11 +180,11 @@ app.post('/add', (req, res) => {
     })
 })
 
-app.delete('/delete/:id', (req, res) => {
-    req.body._id = parseInt(req.body._id)
-    console.log(req.body)
+app.delete('/delete/:_id', (req, res) => {
+    req.params._id = parseInt(req.params._id)
+    console.log(req.params._id)
 
-    let deleteData = { _id: req.body._id, 작성자: req.user._id }
+    let deleteData = { _id: req.params._id, 작성자: req.user._id }
 
     db.collection('post').deleteOne(deleteData, (error, result) => {
         console.log('삭제완료')
@@ -240,4 +246,28 @@ app.post('/upload', upload.single('profile'), (req, res) => {
 
 app.get('/image/:imageName', (req, res) => {
     res.sendFile( __dirname + '/public/image/' + req.params.imageName )
+})
+
+app.post('/chatroom/:name', isLogin, (req, res) => {
+    db.collection('post').findOne({닉네임: req.params.name}, (error, result) => {
+        
+        let chatContents = {
+            member: [result['닉네임'], req.user.id], 
+            date: new Date(), 
+            title: result['닉네임']
+        }
+
+        db.collection('chatroom').insertOne(chatContents, (error, result) => {
+            console.log('채팅방 개설 완료')
+
+            res.redirect('/chatroom/' + req.params.name)
+        })
+    })
+})
+
+app.get('/chatroom/:name', (req, res) => {
+    db.collection('chatroom').find({member: req.user.id}).toArray((error, result) => {
+        console.log(result)
+        res.render('chat.ejs', { data: result })
+    }) 
 })
