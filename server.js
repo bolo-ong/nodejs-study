@@ -34,13 +34,12 @@ app.get('/write', function (req, res) {
 
 app.get('/list', (req, res) => {
     db.collection('post').find().toArray((error, result) => {
-        console.log(result)
         res.render('list.ejs', { posts: result })
     })
 })
 
 app.get('/search', (req, res) => {
-    console.log(req.query.value)
+    
     let searchCondition = [
         {
             $search: {
@@ -248,26 +247,62 @@ app.get('/image/:imageName', (req, res) => {
     res.sendFile( __dirname + '/public/image/' + req.params.imageName )
 })
 
-app.post('/chatroom/:name', isLogin, (req, res) => {
-    db.collection('post').findOne({닉네임: req.params.name}, (error, result) => {
-        
+app.post('/chatroom/:_id', isLogin, (req, res) => {
+    db.collection('post').findOne({_id: parseInt(req.params._id)}, (error, result) => {
+
+        let chatPartner = result['닉네임']
+        let chatMember = [chatPartner, req.user.id]
         let chatContents = {
-            member: [result['닉네임'], req.user.id], 
+            parentId: result['_id'],
+            member: chatMember, 
             date: new Date(), 
-            title: result['닉네임']
+            title: result['제목']
         }
 
-        db.collection('chatroom').insertOne(chatContents, (error, result) => {
-            console.log('채팅방 개설 완료')
+        db.collection('chatroom').findOne({parentId: result['_id']}, (error, result) => {
+            if(!result){
+                db.collection('chatroom').insertOne(chatContents, (error, result) => {
+                    console.log('채팅방 개설 완료')    
+                    res.redirect('/chatroom/' + req.params._id)
+                })
+            }
 
-            res.redirect('/chatroom/' + req.params.name)
+            if(result){
+                result['member'].push(req.user.id)
+                let setNewChatMember = Array.from(new Set(result['member']))
+
+                if(JSON.stringify(chatMember) == JSON.stringify(setNewChatMember)){
+                    console.log('채팅방 이동 완료')
+                    res.redirect('/chatroom/' + req.params._id)
+                }
+                else{
+                    db.collection('chatroom').updateOne({parentId: parseInt(req.params._id)}, { $set: { member: setNewChatMember } }, (error, result) => {
+                        console.log('채팅방 참가 완료')
+                        res.redirect('/chatroom/' + req.params._id)
+                    })
+                }
+            }
         })
     })
 })
 
-app.get('/chatroom/:name', (req, res) => {
+app.get('/chatroom/:_id', (req, res) => {
     db.collection('chatroom').find({member: req.user.id}).toArray((error, result) => {
-        console.log(result)
         res.render('chat.ejs', { data: result })
     }) 
+})
+
+
+app.post('/chat', isLogin, (req, res) => {
+        let messageContents = {
+            parentRoom: parseInt(req.body.parent),
+            채팅: req.body.content,
+            발신: req.user.id,
+            날짜: new Date()
+        }
+
+        db.collection('message').insertOne(messageContents, (error, result) => {
+            console.log('채팅완료')
+            res.redirect('/chatroom/' + parseInt(req.body.parent))
+        })
 })

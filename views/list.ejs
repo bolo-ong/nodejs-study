@@ -29,9 +29,14 @@
 
     <script>
       document.querySelector('#search').addEventListener(
-        'click', function(){
+        'click', function(e){
           let inputData = document.querySelector('#search-input').value
-          window.location.replace(`/search?value=${inputData}`)
+            if(inputData == ''){
+              e.preventDefault()
+            }
+            else{
+            window.location.replace(`/search?value=${inputData}`)
+          }
         })
     </script>
 
@@ -50,13 +55,25 @@
               <p>마감날짜 : <%= posts[i]['날짜'] %></p>
               <button class="delete btn-sm btn-danger" data-id = "<%= posts[i]['_id'] %>">삭제</button>
               <a href="edit/<%= posts[i]['_id'] %>"><button class="correct btn-sm btn-primary">수정</button></a>
-              <form action="/chatroom/<%= posts[i]['닉네임'] %>" method="POST">
-                <button class="correct btn-sm btn-info">채팅</button>
+              <form action="/chatroom/<%= posts[i]['_id'] %>" method="POST" style="display:inline">
+                <button class="correct btn-sm btn-info chat">채팅</button>
               </form>
             </li>
           <% } %>
         </ul>
       </div>
+
+      <!-- <script>
+        document.querySelector('.correct').addEventListener(
+          'click', () => {
+            let sendData = {
+
+            }
+            $.post('/chatroom', sendData).then(()=>{
+                        console.log('전송완료')
+            })
+          })
+      </script> -->
 
       <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
       <script>

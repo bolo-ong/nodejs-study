@@ -24,11 +24,17 @@
                 <div class="col-3">
                     <ul class="list-group chat-list">
                         <% for(let i=0; i<data.length; i++){ %>
-                            <li class="list-group-item" data-id="">
-                                <h6><%= data[i]['title'] %></h6>
-                                <h6 class="text-small"><%= data[i]['date'] %></h6>
-                            </li>
-                        <% } %>
+                            <a href="/chatroom/<%= data[i]['parentId'] %>">
+                                <li class="list-group-item" data-id="<%= data[i]['_id'] %>">
+                                    <h6>
+                                        <%= data[i]['title'] %>
+                                    </h6>
+                                    <h6 class="text-small">
+                                        <%= data[i]['date'] %>
+                                    </h6>
+                                </li>
+                            </a>
+                            <% } %>
                     </ul>
                 </div>
 
@@ -40,17 +46,29 @@
                             <li><span class="chat-box mine">채팅방1 내용</span></li>
                         </ul>
                         <div class="input-group">
-                            <form action="/chat" method="POST">
-                                <input class="form-control" id="chat-input">
-                                <button class="btn btn-secondary" id="send">전송</button>
-                            </form>
-                            
+                            <input class="form-control" id="chat-input">
+                            <button class="btn btn-secondary" id="send">전송</button>
                         </div>
                     </div>
                 </div>
             </div>
 
         </div>
+
+        <script>
+            let id = window.location.href.split("chatroom/")[1]
+            document.querySelector('#send').addEventListener(
+                'click', () => {
+                    let sendData = {
+                        parent: id,
+                        content: document.querySelector('#chat-input').value
+                    }
+
+                    $.post('/chat', sendData).then(() => {
+                        console.log('전송완료')
+                    })
+                })
+        </script>
 
         <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
         <!-- Optional JavaScript; choose one of the two! -->
