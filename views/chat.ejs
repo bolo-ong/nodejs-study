@@ -24,16 +24,16 @@
                 <div class="col-3">
                     <ul class="list-group chat-list">
                         <% for(let i=0; i<data.length; i++){ %>
-                            <a href="/chatroom/<%= data[i]['parentId'] %>">
-                                <li class="list-group-item" data-id="<%= data[i]['_id'] %>">
-                                    <h6>
-                                        <%= data[i]['title'] %>
-                                    </h6>
-                                    <h6 class="text-small">
-                                        <%= data[i]['date'] %>
-                                    </h6>
-                                </li>
-                            </a>
+                            <!-- <a href="/chatroom/<%= data[i]['parentId'] %>"> -->
+                            <li class="list-group-item" data-id="<%= data[i]['parentId'] %>" style="cursor:pointer">
+                                <h6>
+                                    <%= data[i]['title'] %>
+                                </h6>
+                                <h6 class="text-small">
+                                    <%= data[i]['date'] %>
+                                </h6>
+                            </li>
+                            <!-- </a> -->
                             <% } %>
                     </ul>
                 </div>
@@ -41,9 +41,11 @@
                 <div class="col-9 p-0">
                     <div class="chat-room">
                         <ul class="list-group chat-content">
-                            <li><span class="chat-box">채팅방1 내용</span></li>
-                            <li><span class="chat-box">채팅방1 내용</span></li>
-                            <li><span class="chat-box mine">채팅방1 내용</span></li>
+                            <% for(let i=0; i<message.length; i++){ %>
+                                <li><span class="chat-box">
+                                        <%= message[i]['채팅'] %>
+                                    </span></li>
+                                <% } %>
                         </ul>
                         <div class="input-group">
                             <input class="form-control" id="chat-input">
@@ -56,9 +58,43 @@
         </div>
 
         <script>
+            let eventSource
+
+            for (let i = 0; i < document.querySelectorAll('.list-group-item').length; i++) {
+                document.querySelectorAll('.list-group-item')[i].addEventListener('click', function (e) {
+                    // let eventSource = new EventSource('/message/' + this.dataset.id)
+                    // eventSource.addEventListener('test', (e) => {
+                    //     let serverData = JSON.parse(e.data)
+
+                    //     if (eventSource != undefined) {
+                    //         eventSource.close()
+                    //     }
+                    //     serverData.forEach((j) => {
+                    //         let chatHtml = `<li><span class="chat-box">${j['채팅']}</span></li>`
+                    //         document.querySelector('.chat-content').insertAdjacentHTML('beforeend', chatHtml)
+                    //     })
+                    // })
+                    location.href = `/chatroom/${this.dataset.id}`
+                })
+            }
+
+            document.querySelector('#chat-input').addEventListener(
+                'click', function (e) {
+
+                    let eventSource = new EventSource('/message/' + id)
+                    eventSource.addEventListener('test', (e) => {
+                        let serverData = JSON.parse(e.data)
+
+                        serverData.forEach((j) => {
+                            let chatHtml = `<li><span class="chat-box">${j['채팅']}</span></li>`
+                            document.querySelector('.chat-content').insertAdjacentHTML('beforeend', chatHtml)
+                        })
+                    })
+                }, { once: true })
+
             let id = window.location.href.split("chatroom/")[1]
             document.querySelector('#send').addEventListener(
-                'click', () => {
+                'click', function (e) {
                     let sendData = {
                         parent: id,
                         content: document.querySelector('#chat-input').value
@@ -67,7 +103,9 @@
                     $.post('/chat', sendData).then(() => {
                         console.log('전송완료')
                     })
+                    document.querySelector('#chat-input').value = ""
                 })
+
         </script>
 
         <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>

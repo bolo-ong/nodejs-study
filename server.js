@@ -262,7 +262,7 @@ app.post('/chatroom/:_id', isLogin, (req, res) => {
         db.collection('chatroom').findOne({parentId: result['_id']}, (error, result) => {
             if(!result){
                 db.collection('chatroom').insertOne(chatContents, (error, result) => {
-                    console.log('채팅방 개설 완료')    
+                    console.log('채팅방 개설 완료')
                     res.redirect('/chatroom/' + req.params._id)
                 })
             }
@@ -286,10 +286,17 @@ app.post('/chatroom/:_id', isLogin, (req, res) => {
     })
 })
 
+
 app.get('/chatroom/:_id', (req, res) => {
-    db.collection('chatroom').find({member: req.user.id}).toArray((error, result) => {
-        res.render('chat.ejs', { data: result })
-    }) 
+    db.collection('message').find({parentRoom: parseInt(req.params._id)}).toArray((error, result) => {
+        let messageData = result
+
+        db.collection('chatroom').find({member: req.user.id}).toArray((error, result) => {
+            let chatRoomData = result
+
+            res.render('chat.ejs', {message: messageData, data: chatRoomData})
+        })
+    })
 })
 
 
@@ -303,6 +310,31 @@ app.post('/chat', isLogin, (req, res) => {
 
         db.collection('message').insertOne(messageContents, (error, result) => {
             console.log('채팅완료')
-            res.redirect('/chatroom/' + parseInt(req.body.parent))
+            res.send('ok')
+            // res.redirect('/chatroom/' + parseInt(req.body.parent))
         })
 })
+
+
+app.get('/message/:id', isLogin, (req, res) => {
+    res.writeHead(200, {
+        "Connection": "keep-alive",
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+    })
+
+    // db.collection('message').find({parentRoom: parseInt(req.params.id)}).toArray((error, result) => {
+    //     res.write('event: test\n');
+    //     res.write(`data: ${JSON.stringify(result)}\n\n`);
+    // })
+
+    const pipeline = [
+        { $match: { 'fullDocument.parentRoom': parseInt(req.params.id)} }
+    ];
+    const collection = db.collection('message');
+    const changeStream = collection.watch(pipeline);
+    changeStream.on('change', (result) => {
+        res.write('event: test\n');
+        res.write(`data: ${JSON.stringify([result.fullDocument])}\n\n`)
+    });
+});
