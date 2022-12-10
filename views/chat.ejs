@@ -59,6 +59,7 @@
 
         <script>
             let eventSource
+            let id = parseInt(window.location.href.split("chatroom/")[1])
 
             for (let i = 0; i < document.querySelectorAll('.list-group-item').length; i++) {
                 document.querySelectorAll('.list-group-item')[i].addEventListener('click', function (e) {
@@ -80,10 +81,31 @@
 
             document.querySelector('#chat-input').addEventListener(
                 'click', function (e) {
+                    console.log('sse시작')
 
-                    let eventSource = new EventSource('/message/' + id)
+                    let eventSource = new EventSource('/message/'+id)
+                    console.log(eventSource)
+
                     eventSource.addEventListener('test', (e) => {
                         let serverData = JSON.parse(e.data)
+
+                        if (typeof (EventSource) !== "undefined") {
+                            console.log("sse지원");
+                        } else {
+                            console.log("sse미지원");
+                        }
+
+                        eventSource.addEventListener('error', function (e) {
+                            if (e.eventPhase == EventSource.CLOSED) {
+                                eventSource.close()
+                            }
+                            if (e.target.readyState == EventSource.CLOSED) {
+                                console.log("Disconnected");
+                            }
+                            else if (e.target.readyState == EventSource.CONNECTING) {
+                                console.log("Connecting...");
+                            }
+                        }, false);
 
                         serverData.forEach((j) => {
                             let chatHtml = `<li><span class="chat-box">${j['채팅']}</span></li>`
@@ -92,7 +114,6 @@
                     })
                 }, { once: true })
 
-            let id = window.location.href.split("chatroom/")[1]
             document.querySelector('#send').addEventListener(
                 'click', function (e) {
                     let sendData = {

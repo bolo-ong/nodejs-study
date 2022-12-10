@@ -4,6 +4,7 @@ app.use(express.urlencoded({ extended: true }))
 const MongoClient = require('mongodb').MongoClient
 const methodOverride = require('method-override')
 app.use(methodOverride('_method'))
+const cors = require('cors')
 
 require('dotenv').config()
 
@@ -315,6 +316,8 @@ app.post('/chat', isLogin, (req, res) => {
         })
 })
 
+
+app.use(cors());
 
 app.get('/message/:id', isLogin, (req, res) => {
     res.writeHead(200, {
