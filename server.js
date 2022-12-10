@@ -6,6 +6,10 @@ const methodOverride = require('method-override')
 app.use(methodOverride('_method'))
 const cors = require('cors')
 
+const http = require('http').createServer(app)
+const {Server} = require('socket.io')
+const io = new Server(http)
+
 require('dotenv').config()
 
 app.set('view engine', 'ejs')
@@ -20,8 +24,29 @@ MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, cl
         return console.log(error)
     }
 
-    app.listen(process.env.PORT, () => {
+    http.listen(process.env.PORT, () => {
         console.log('listening on 8080')
+    })
+})
+
+
+app.get('/socket', (req, res) => {
+    res.render('socket.ejs')
+})
+io.on('connection', (socket) => {
+    console.log('socket접속 완료')
+
+    socket.on('joinroom', (data) => {
+        socket.join('room1')
+    })
+
+    socket.on('room1-send', (data) => {
+        io.to('room1').emit('broadcast', data)
+    })
+
+    socket.on('user-send', (data) => {
+        io.emit('broadcast', data)
+        // io.to(socket.id).emit('broadcast', data) 서버-유저 1명간 단독 통신
     })
 })
 
@@ -215,6 +240,7 @@ app.use('/board/sub', require('./routes/board.js'));
 
 
 let multer = require('multer');
+const { render } = require('ejs')
 var storage = multer.diskStorage({
     destination : (req, file, cb) => {
         cb(null, './public/image')
