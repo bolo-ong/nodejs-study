@@ -47,7 +47,7 @@
                                     </span></li>
                                 <% } %>
                         </ul>
-                        <div class="input-group">
+                        <div class="input-group" style="padding-top:10px">
                             <input class="form-control" id="chat-input">
                             <button class="btn btn-secondary" id="send">전송</button>
                         </div>
@@ -56,6 +56,12 @@
             </div>
 
         </div>
+
+
+        <script>
+            let chatData = document.querySelector('.chat-content')
+            chatData.scrollTop = chatData.scrollHeight - chatData.clientHeight
+        </script>
 
         <script>
             let eventSource
@@ -83,7 +89,7 @@
                 'click', function (e) {
                     console.log('sse시작')
 
-                    let eventSource = new EventSource('/message/'+id)
+                    let eventSource = new EventSource('/message/' + id)
                     console.log(eventSource)
 
                     eventSource.addEventListener('test', (e) => {
@@ -110,6 +116,9 @@
                         serverData.forEach((j) => {
                             let chatHtml = `<li><span class="chat-box">${j['채팅']}</span></li>`
                             document.querySelector('.chat-content').insertAdjacentHTML('beforeend', chatHtml)
+
+                            let chatData = document.querySelector('.chat-content')
+                            chatData.scrollTop = chatData.scrollHeight - chatData.clientHeight
                         })
                     })
                 }, { once: true })
