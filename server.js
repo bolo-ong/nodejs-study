@@ -350,6 +350,7 @@ app.get('/message/:id', isLogin, (req, res) => {
         "Connection": "keep-alive",
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
     })
 
     // db.collection('message').find({parentRoom: parseInt(req.params.id)}).toArray((error, result) => {
